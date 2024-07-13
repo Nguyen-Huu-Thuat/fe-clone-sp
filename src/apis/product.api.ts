@@ -12,7 +12,7 @@ const productApi = {
   },
   getProductDetail(id: string) {
     return http.get<SuccessResponse<Product>>(`${URL}/${id}`)
-  },
+  }
 }
 
 export default productApi
