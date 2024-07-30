@@ -1,12 +1,34 @@
-import { Link } from 'react-router-dom'
+import { createSearchParams, Link, useNavigate } from 'react-router-dom'
 import Popover from '../Popover'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import authApi from 'src/apis/auth.api'
 import { useContext } from 'react'
 import { AppContext } from 'src/contexts/app.context'
 import { path } from 'src/constants/path'
+import useQueryConfig from 'src/hooks/useQueryConfig'
+import { useForm } from 'react-hook-form'
+import { schema, Schema } from 'src/utils/rule'
+import { yupResolver } from '@hookform/resolvers/yup'
+import { omit } from 'lodash'
+import { purchaseStatus } from 'src/constants/purchase'
+import purchaseApi from 'src/apis/purchase.api'
+import cart_empty from 'src/assets/cart_empty.png'
+import { formatCurrency } from 'src/utils/utils'
+
+type FormData = Pick<Schema, 'name'>
+
+const nameSchema = schema.pick(['name'])
+const MAX_PRODUCT_IN_CART = 5
 
 export default function Header() {
+  const queryConfig = useQueryConfig()
+  const navigate = useNavigate()
+  const { register, handleSubmit } = useForm<FormData>({
+    resolver: yupResolver(nameSchema),
+    defaultValues: {
+      name: ''
+    }
+  })
   const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
   const logoutMutation = useMutation({
     mutationFn: () => authApi.logout(),
@@ -19,6 +41,34 @@ export default function Header() {
   const handleLogout = () => {
     logoutMutation.mutate()
   }
+  const onSubmitSearch = handleSubmit((data) => {
+    const config = queryConfig.order
+      ? omit(
+          {
+            ...queryConfig,
+            name: data.name
+          },
+          ['order', 'sort_by']
+        )
+      : {
+          ...queryConfig,
+          name: data.name
+        }
+    navigate({
+      pathname: path.home,
+      search: createSearchParams(config).toString()
+    })
+  })
+
+  const { data: purchasesInCartData } = useQuery({
+    queryKey: ['purchases', { status: purchaseStatus.inCart }],
+    queryFn: () => purchaseApi.getPurchase({ status: purchaseStatus.inCart })
+  })
+
+  const purchasesInCart = purchasesInCartData?.data.data
+
+  console.log(purchasesInCart)
+
   return (
     <div className='pb-5 pt-2 bg-[linear-gradient(-180deg,#f53d2d,#f63)]'>
       <div className='container'>
@@ -109,6 +159,7 @@ export default function Header() {
             </div>
           )}
         </div>
+
         <div className='grid grid-cols-12 gap-4 mt-4 items-end'>
           <Link to='/' className='col-span-2'>
             <svg viewBox='0 0 192 65' className='h-8 lg:h-11 fill-white'>
@@ -117,13 +168,13 @@ export default function Header() {
               </g>
             </svg>
           </Link>
-          <form className='col-span-9'>
+          <form className='col-span-9' onSubmit={onSubmitSearch}>
             <div className='bg-white rounded-sm p-1 flex'>
               <input
                 type='text'
-                name='search'
                 className='text-black px-3 py-2 flex-grow border-none outline-none bg-transparent'
                 placeholder='FREESHIP ĐƠN TỪ 0Đ'
+                {...register('name')}
               />
               <button className='rounded-sm py-2 px-6 flex-shrink-0 bg-orange hover:opacity-90'>
                 <svg
@@ -149,85 +200,49 @@ export default function Header() {
               placement='bottom-end'
               renderPopver={
                 <div className='bg-white relative shadow-md rounded-sm border-gray-200 text-sm max-w-[400px]'>
-                  <div className='p-2'>
-                    <div className='text-gray-400 capitalize'>Sản phẩm mới thêm</div>
-                    <div className='mt-5'>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            src='https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lpaedb4x6o2j6e_tn'
-                            alt='_blank'
-                            className='w-10 h-10 object-cover rounded-sm'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>Áo khoác Bomber Dreams DAVUBA chần bông 3 lớp nam nữ SM051</div>
-                        </div>
+                  {purchasesInCart ? (
+                    <div className='p-2'>
+                      <div className='text-gray-400 capitalize'>Sản phẩm mới thêm</div>
+                      <div className='mt-5'>
+                        {purchasesInCart.slice(0, MAX_PRODUCT_IN_CART).map((purchase, index) => (
+                          <div className='mt-2 py-2 flex hover:bg-gray-100 cursor-pointer' key={index}>
+                            <div className='flex-shrink-0'>
+                              <img
+                                src={purchase.product.image}
+                                alt={purchase.product.name}
+                                className='w-10 h-10 object-cover rounded-sm'
+                              />
+                            </div>
+                            <div className='flex-grow ml-2 overflow-hidden'>
+                              <div className='truncate'>{purchase.product.name}</div>
+                            </div>
 
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫245.000</span>
-                        </div>
+                            <div className='ml-2 flex-shrink-0'>
+                              <span className='text-orange'>{formatCurrency(purchase.product.price)}đ</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            src='https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lpaedb4x6o2j6e_tn'
-                            alt='_blank'
-                            className='w-10 h-10 object-cover rounded-sm'
-                          />
+                      <div className='flex mt-6 items-center justify-between'>
+                        <div className='capitalize text-xs text-gray-600'>
+                          {purchasesInCart.length > MAX_PRODUCT_IN_CART && purchasesInCart.length - MAX_PRODUCT_IN_CART}{' '}
+                          Thêm vào giỏ hàng
                         </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>Áo khoác Bomber Dreams DAVUBA chần bông 3 lớp nam nữ SM051</div>
-                        </div>
-
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫245.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            src='https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lpaedb4x6o2j6e_tn'
-                            alt='_blank'
-                            className='w-10 h-10 object-cover rounded-sm'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>Áo khoác Bomber Dreams DAVUBA chần bông 3 lớp nam nữ SM051</div>
-                        </div>
-
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫245.000</span>
-                        </div>
-                      </div>
-                      <div className='mt-4 flex'>
-                        <div className='flex-shrink-0'>
-                          <img
-                            src='https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lpaedb4x6o2j6e_tn'
-                            alt='_blank'
-                            className='w-10 h-10 object-cover rounded-sm'
-                          />
-                        </div>
-                        <div className='flex-grow ml-2 overflow-hidden'>
-                          <div className='truncate'>Áo khoác Bomber Dreams DAVUBA chần bông 3 lớp nam nữ SM051</div>
-                        </div>
-
-                        <div className='ml-2 flex-shrink-0'>
-                          <span className='text-orange'>₫245.000</span>
+                        <div className='capitalize bg-orange hover:bg-opacity-80 rounded-sm py-2 px-4 text-white cursor-pointer'>
+                          Xem giỏ hàng
                         </div>
                       </div>
                     </div>
-                    <div className='flex mt-6 items-center justify-between'>
-                      <div className='capitalize text-xs text-gray-600'>Thêm vào giỏ hàng</div>
-                      <div className='capitalize bg-orange hover:bg-opacity-80 rounded-sm py-2 px-4 text-white cursor-pointer'>
-                        Xem giỏ hàng
-                      </div>
+                  ) : (
+                    <div className='h-[350px] w-[350px] flex items-center justify-center p-2'>
+                      <img src={cart_empty} alt='cart empty' className='h-20 w-20' />
+                      <div className='mt-2'>Chưa có sản phẩm</div>
                     </div>
-                  </div>
+                  )}
                 </div>
               }
             >
-              <Link to='/' className=''>
+              <Link to='/' className='relative'>
                 <svg
                   xmlns='http://www.w3.org/2000/svg'
                   fill='none'
@@ -242,6 +257,9 @@ export default function Header() {
                     d='M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 0 0-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 0 0-16.536-1.84M7.5 14.25 5.106 5.272M6 20.25a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Zm12.75 0a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z'
                   />
                 </svg>
+                <span className='absolute top-[-8px] left-[15px] rounded-full px-[9px] py-[1px] bg-white text-orange text-xs'>
+                  {purchasesInCart?.length}
+                </span>
               </Link>
             </Popover>
           </div>

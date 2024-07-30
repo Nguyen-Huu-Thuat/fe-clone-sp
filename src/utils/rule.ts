@@ -89,9 +89,10 @@ export const schema = yup.object({
     name: 'price-not-allow',
     message: 'Giá không hợp lệ',
     test: testPriceMinMax
-  })
+  }),
+  name: yup.string().required('Tên là bắt buộc').trim()
 })
 
-export const loginSchema = schema.omit(['confirm_password'])
+export const loginSchema = schema.omit(['confirm_password', 'price_max', 'price_min', 'name'])
 
 export type Schema = yup.InferType<typeof schema>

@@ -41,7 +41,6 @@ export default function AsideFilter({ queryConfig, categories }: Props) {
 
   const navigate = useNavigate()
   // const valueForm = watch()
-  console.log(errors)
 
   const onSubmit = handleSubmit((data) => {
     navigate({

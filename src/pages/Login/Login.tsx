@@ -11,7 +11,7 @@ import { ErrorResponse } from 'src/types/utils.type'
 import { Schema, loginSchema } from 'src/utils/rule'
 import { isAxiosUnprocessableEntityError } from 'src/utils/utils'
 
-type FormData = Omit<Schema, 'confirm_password'>
+type FormData = Omit<Schema, 'confirm_password' | 'price_min' | 'price_max' | 'name'>
 
 export default function Login() {
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
@@ -81,7 +81,7 @@ export default function Login() {
                   type='submit'
                   className='w-full text-center px-4 py-2 rounded bg-red-500 text-white text-sm hover:bg-red-600 flex items-center justify-center'
                   isLoading={loginMutation.isPending}
-                  disabled={loginMutation.isPending}
+                  // disabled={loginMutation.isPending}
                 >
                   Đăng nhập
                 </Button>
