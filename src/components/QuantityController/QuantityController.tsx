@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import InputNumber, { InputNumberProps } from '../InputNumber'
 
 interface Props extends InputNumberProps {
@@ -6,6 +6,7 @@ interface Props extends InputNumberProps {
   onIncrease?: (value: number) => void
   onDecrease?: (value: number) => void
   onType?: (value: number) => void
+  onFocusOut?: (value: number) => void
   classNameWrapper?: string
 }
 
@@ -14,10 +15,12 @@ export default function QuantityController({
   onIncrease,
   onDecrease,
   onType,
+  onFocusOut,
   classNameWrapper = 'ml-10',
   value,
   ...rest
 }: Props) {
+  const [localValue, setLocalValue] = useState(Number(value || 0))
   const handleChane = (e: React.ChangeEvent<HTMLInputElement>) => {
     let _value = Number(e.target.value)
     if (max !== undefined && _value > max) {
@@ -27,22 +30,29 @@ export default function QuantityController({
     }
 
     onType && onType(_value)
+    setLocalValue(_value)
   }
 
   const increase = () => {
-    let _value = Number(value) + 1
+    let _value = Number(value || localValue) + 1
     if (max !== undefined && _value > max) {
       _value = max
     }
     onIncrease && onIncrease(_value)
+    setLocalValue(_value)
   }
 
   const decrease = () => {
-    let _value = Number(value) - 1
+    let _value = Number(value || localValue) - 1
     if (_value < 1) {
       _value = 1
     }
     onDecrease && onDecrease(_value)
+    setLocalValue(_value)
+  }
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement, Element>) => {
+    onFocusOut && onFocusOut(Number(e.target.value))
   }
   return (
     <div className={'flex items-center ' + classNameWrapper}>
@@ -62,11 +72,12 @@ export default function QuantityController({
         </svg>
       </button>
       <InputNumber
-        value={value}
+        value={value || localValue}
         className=''
         classNameError='hidden'
         classNameInput='h-8 w-14 border-t border-b border-gray-300 p-1 text-center outline-none'
         onChange={handleChane}
+        onBlur={handleBlur}
         {...rest}
       />
       <button

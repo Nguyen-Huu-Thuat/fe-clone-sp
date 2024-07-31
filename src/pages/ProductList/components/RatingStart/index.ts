@@ -1,3 +1,3 @@
-import RatingStart from "./RatingStart";
+import RatingStart from './RatingStart'
 
 export default RatingStart

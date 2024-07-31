@@ -47,6 +47,10 @@ class Http {
           const message = data?.message || error.message
           toast.error(message)
         }
+        // Xóa token khi token hết hạn
+        if (error.response?.status === HttpStatusCode.Unauthorized) {
+          clearLS()
+        }
         console.log(error)
         return Promise.reject(error)
       }
