@@ -77,7 +77,7 @@ export default function Register() {
                 register={register}
               />
               <Input
-                className='mt-4'
+                className='relative mt-4'
                 errorMessages={errors.password?.message}
                 type='password'
                 name='password'
@@ -86,7 +86,7 @@ export default function Register() {
                 autoComplete='on'
               />
               <Input
-                className='mt-4'
+                className=' relative mt-4'
                 errorMessages={errors.confirm_password?.message}
                 type='password'
                 name='confirm_password'

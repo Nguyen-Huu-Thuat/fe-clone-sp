@@ -60,7 +60,7 @@ export default function Login() {
             <form className='p-10 rounded bg-white shadow-sm' onSubmit={onSubmit} noValidate>
               <div className='text-2xl'>Đăng nhập</div>
               <Input
-                className='mt-8'
+                className='relative mt-8'
                 errorMessages={errors.email?.message}
                 type='email'
                 name='email'
@@ -68,7 +68,7 @@ export default function Login() {
                 register={register}
               />
               <Input
-                className='mt-4'
+                className='relative mt-4'
                 errorMessages={errors.password?.message}
                 type='password'
                 name='password'
