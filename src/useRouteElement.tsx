@@ -1,16 +1,22 @@
 import { Navigate, Outlet, useRoutes } from 'react-router-dom'
 import Register from './pages/Register'
 import ProductList from './pages/ProductList'
-import Login from './pages/Login'
+// import Login from './pages/Login'
 import RegisterLayout from './layouts/RegisterLayout'
 import MainLayout from './layouts/MainLayout/MainLayout'
-import Profile from './pages/Profile'
-import { useContext } from 'react'
+import { lazy, Suspense, useContext } from 'react'
 import { AppContext } from './contexts/app.context'
 import { path } from './constants/path'
 import ProductDetail from './pages/ProductDetail'
 import Cart from './pages/Cart'
 import CartLayout from './layouts/CartLayout'
+import UserLayout from './pages/User/layouts/UserLayout'
+import ChangPassword from './pages/User/pages/ChangPassword'
+import HistoryPurchase from './pages/User/pages/HistoryPurchase'
+import Profile from './pages/User/pages/Profile'
+import PageNotFound from './pages/PageNotFound'
+
+const Login = lazy(() => import('./pages/Login'))
 
 function ProtectedRoutes() {
   const { isAuthenticated } = useContext(AppContext)
@@ -19,7 +25,6 @@ function ProtectedRoutes() {
 
 function RejectedRoutes() {
   const { isAuthenticated } = useContext(AppContext)
-  console.log(isAuthenticated)
 
   return !isAuthenticated ? <Outlet /> : <Navigate to='/' />
 }
@@ -47,20 +52,34 @@ export default function useRouteElement() {
       element: <ProtectedRoutes />,
       children: [
         {
-          path: path.profile,
-          element: (
-            <MainLayout>
-              <Profile />
-            </MainLayout>
-          )
-        },
-        {
           path: path.cart,
           element: (
             <CartLayout>
               <Cart />
             </CartLayout>
           )
+        },
+        {
+          path: path.user,
+          element: (
+            <MainLayout>
+              <UserLayout />
+            </MainLayout>
+          ),
+          children: [
+            {
+              path: path.profile,
+              element: <Profile />
+            },
+            {
+              path: path.changPassword,
+              element: <ChangPassword />
+            },
+            {
+              path: path.historyPurchase,
+              element: <HistoryPurchase />
+            }
+          ]
         }
       ]
     },
@@ -80,11 +99,21 @@ export default function useRouteElement() {
           path: path.login,
           element: (
             <RegisterLayout>
-              <Login />
+              <Suspense>
+                <Login />
+              </Suspense>
             </RegisterLayout>
           )
         }
       ]
+    },
+    {
+      path: '*',
+      element: (
+        <MainLayout>
+          <PageNotFound />
+        </MainLayout>
+      )
     }
   ])
   return routeElement

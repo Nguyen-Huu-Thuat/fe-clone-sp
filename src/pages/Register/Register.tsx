@@ -21,7 +21,6 @@ export default function Register() {
   const {
     register,
     handleSubmit,
-    getValues,
     setError,
     formState: { errors }
   } = useForm<FormData>({

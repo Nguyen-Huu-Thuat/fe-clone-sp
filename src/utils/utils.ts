@@ -1,5 +1,8 @@
 import axios, { AxiosError } from 'axios'
+import config from 'src/constants/config'
 import HttpStatusCode from 'src/constants/httpStatusCode.enum'
+import avt_default from 'src/assets/mom.jpg'
+import { ErrorResponse } from 'src/types/utils.type'
 
 export function isAxiosError(error: unknown): error is AxiosError {
   // eslint-disable-next-line import/no-named-as-default-member
@@ -8,6 +11,17 @@ export function isAxiosError(error: unknown): error is AxiosError {
 
 export function isAxiosUnprocessableEntityError<FormError>(error: unknown): error is AxiosError<FormError> {
   return isAxiosError(error) && error.response?.status === HttpStatusCode.UnprocessableEntity
+}
+
+export function isAxiosUnauthorizedError<UnauthorizedError>(error: unknown): error is AxiosError<UnauthorizedError> {
+  return isAxiosError(error) && error.response?.status === HttpStatusCode.Unauthorized
+}
+
+export function isAxiosExpiredTokenError<UnauthorizedError>(error: unknown): error is AxiosError<UnauthorizedError> {
+  return (
+    isAxiosUnauthorizedError<ErrorResponse<{ name: string; message: string }>>(error) &&
+    error.response?.data?.data?.name === 'EXPIRED_TOKEN'
+  )
 }
 
 export function formatCurrency(currency: number) {
@@ -39,4 +53,8 @@ export const generateNameId = ({ name, id }: { name: string; id: string }) => {
 export const getIdFromNameId = (nameId: string) => {
   const arr = nameId.split('-i.')
   return arr[arr.length - 1]
+}
+
+export const getAvatarUrl = (avatarName?: string) => {
+  return avatarName ? `${config.BASE_URL}images/${avatarName}` : avt_default
 }

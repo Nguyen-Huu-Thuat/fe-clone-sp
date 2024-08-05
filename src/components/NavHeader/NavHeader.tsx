@@ -6,6 +6,7 @@ import authApi from 'src/apis/auth.api'
 import { purchaseStatus } from 'src/constants/purchase'
 import { useContext } from 'react'
 import { AppContext } from 'src/contexts/app.context'
+import { getAvatarUrl } from 'src/utils/utils'
 
 export default function NavHeader() {
   const { setIsAuthenticated, isAuthenticated, setProfile, profile } = useContext(AppContext)
@@ -67,12 +68,15 @@ export default function NavHeader() {
           renderPopver={
             <div>
               <Link
-                to='/profile'
+                to={path.profile}
                 className='block py-2 px-3 hover:bg-slate-100 bg-white hover:text-cyan-500 w-full text-left'
               >
                 Tài khoản của tôi
               </Link>
-              <Link to='/' className='block py-2 px-3 hover:bg-slate-100 bg-white hover:text-cyan-500 w-full text-left'>
+              <Link
+                to={path.historyPurchase}
+                className='block py-2 px-3 hover:bg-slate-100 bg-white hover:text-cyan-500 w-full text-left'
+              >
                 Đơn mua
               </Link>
               <button
@@ -86,11 +90,7 @@ export default function NavHeader() {
           className='flex items-center py-1 mr-2 ml-6 hover:text-gray-300 cursor-pointer'
         >
           <div className='w-6 h-6 mr-2 flex-shrink-0'>
-            <img
-              src='https://down-vn.img.susercontent.com/file/90d8d089f26104b7708b3774c39c58a2_tn'
-              alt=''
-              className='w-full h-full object-cover rounded-full'
-            />
+            <img src={getAvatarUrl(profile?.avatar)} alt='' className='w-full h-full object-cover rounded-full' />
           </div>
           <div className='text-white'>{profile?.email}</div>
         </Popover>
